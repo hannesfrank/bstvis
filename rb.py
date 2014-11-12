@@ -18,7 +18,7 @@ class RBNode(Node):
         """
         root node should have tree set to adjust when rotated
         """
-        super(RBNode, self).__init__(key, data, parent, left, right, tree)
+        super().__init__(key, data, parent, left, right, tree)
         self.color = color
         self.bh = bh
 
@@ -77,7 +77,7 @@ class RBTree(NaiveBST):
     can be maintained without extra cost.
     """
     def __init__(self):
-        super(RBTree, self).__init__()
+        super().__init__()
     # drawing reads color attributes so use constants of matplotlib
 
     # search like NaiveBST
@@ -241,7 +241,7 @@ class RBTree(NaiveBST):
         if x.color == RED:
             RBTree._insert_fixup(x)
 
-    def split(self, x, tv=None):
+    def split(self, x):
         # search for x
         p = self.root
         while p != None:
@@ -255,7 +255,6 @@ class RBTree(NaiveBST):
             raise KeyError("Key {} not found".format(x))
 
         while p != self.root:
-            tv.display()
             if p == p.parent.left:
                 #     pp
                 #    /  \
@@ -277,14 +276,14 @@ def main():
     
     tree = RBTree()
     # tv = drawing.TreeView(tree)
-    tv = drawing.TreeView(tree, animation=True)
+    tv = drawing.TreeView(tree, node_attributes=['bh'], animation=True)
     n = 3
     universe = list(range(n))
     random.shuffle(universe)
     for key in universe:
         tree.insert(key)
         # tv.display(pause=0.1)
-    tv.display(pause=0.01)
+    tv.display()
     # tree.root.left.right.rotate()
     # tv.display(pause=2)
     # tree.root.right.left.rotate()
@@ -320,13 +319,21 @@ def joinTest():
 
     import treeview
     tv = treeview.TreeView(t)
-    tv.display(pause=5)
+    tv.view()
     RBTree.join(t)
-    tv.display(pause=5)
+    tv.view()
 
 if __name__ == '__main__':
     # main()
-    # joinTest()
-    r = RBNode(5)
-    print(r)
-    print(dir(r))
+    joinTest()
+    
+    # introspection test
+    # t = RBTree()
+    # t.insert(7)
+    # t.insert(2)
+    # r = t.root
+    # print(r)
+    # print(dir(r))
+    # print(r.__dict__)
+    # print(dir(RBNode))
+    # print(RBNode.__dict__)
