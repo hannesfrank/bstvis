@@ -15,6 +15,7 @@ coverage html
 # xdg-open htmlcov/index.html
 
 # copy result to webspace
+rm -r /home/hannes/www/coverage/pyBSTViewer/*
 mv -T htmlcov/ /home/hannes/www/coverage/pyBSTViewer/
 # TODO maybe use pyBSTViewer/latest and keep versions
 
