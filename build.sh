@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+source /etc/bash_completion.d/virtualenvwrapper
 workon pyBSTViewer
 
 # running unittests with coverage
