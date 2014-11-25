@@ -190,8 +190,67 @@ def join():
     p.left.rotate()
     tv.display(pause=1)
 
+def dsw_algorithm(t, v):
+    p = t.root
+    n = 0   # number of nodes
+    if not p:
+        return
+    v.view(highlight_nodes=[p])
+
+    # phase 1: make a right leaning chain/linked list
+    # go to leaf
+    while p.right:
+        p = p.right
+        v.view(highlight_nodes=[p])
+    # go up and rotate all left childs until at root
+    while True:
+        while p.left:
+            p.left.rotate()
+            v.view(highlight_nodes=[p])
+
+        if p.parent:
+            p = p.parent
+            n += 1
+            v.view(highlight_nodes=[p])
+        else:
+            break
+    # phase 2: 
+    n += 1
+
+    x = 1       # discrete log
+    while 2*x < n:
+        x *= 1
+        
+
+def dsw_algorithm_vis():
+    from functionaltree.treeview import TreeView
+    t = NaiveBST()
+    v = TreeView(t)
+    keys = range(10)
+    keys = [4, 2, 6, 1, 3, 5, 7]
+    for i in keys:
+        t.insert(i)
+    v.view()
+    
+    dsw_algorithm(t,v)
+    v.view()
+    # while p.right and p.right.right:
+    #     p = p.right
+    #     p.rotate()
+    #     p = p.right
+    #     v.view()
+
+
+    # while p.parent and p.parent.parent:
+    #     p.rotate()
+    #     p = p.parent
+    #     v.view()
+
+
 def main():
-    join()
+    # usage()
+    # join()
+    dsw_algorithm_vis()
 
 if __name__ == '__main__':
     main()
