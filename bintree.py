@@ -1,10 +1,13 @@
-class BinaryTree():
+from treeview import Viewable
+
+class BinaryTree(Viewable):
     """
     Base for BST implementation.
 
     Provides some necessary methods for plotting.
     """
     def __init__(self):
+        super().__init__()
         self.root = None
 
     def height(self):
