@@ -2,6 +2,7 @@ from tkinter import Tk, Button, Canvas
 import tkinter
 import time
 import functools
+import types
 
 class Viewable(object):
     """Inherit from this to get a method to manually view the datastructure.
@@ -14,11 +15,11 @@ class Viewable(object):
         if self._viewer:
             self._viewer.view(*args, **kwargs)
 
-class TreeView:
+class TreeView(object):
     """Viewer for a Binary Trees.
 
     If your binary tree is a subclass of Viewable you can use 
-    self.view(**kwargs) to manually invocate a view.
+    self.view(**kwargs) to manually invocate a view inside the tree class.
     
     Note: 
         A node must always represent the same key-data-pair and should not 
@@ -27,10 +28,12 @@ class TreeView:
 
     Args:
         tree (BinaryTree): A reference to the tree to be viewed.
-
-    Kwargs:
         node_attributes (list, optional): fields of a Node as string which 
             should be viewed next to the node, default [].
+        # TODO view_after redesign
+        view_after (list of string, optional): the name of all functions of the
+            class of t that should invoke view(..) after execution,
+            default [].
         width (int, optional): tk-viewport width in px, default 800.
         height (int, optional): tk-viewport height in px, default 600.
         node_radius (int, optional): radius of the nodes of the tree in px, 
@@ -38,10 +41,27 @@ class TreeView:
         font_size (int, optional): font_size of node labels in pt, default 12.
         animation (bool, optional): animate between tree snapshots, 
             default True.
+
+    Example:
+        create a binary search tree
+        >>> t = RBTree()
+
+        set up the viewer
+        >>> v = TreeView(t, node_attributes=['bh'],
+        # TODO view_after redesign
+        ...       view_after=['insert', 'delete'])
+    
+        execute your algorithm
+        >>> t.insert(4)     # invokes view(method='insert(4)')
+        >>> t.insert(2)     
+        
+        and view at special states
+        >>> v.view(highlight_nodes=[t.root])    # highlight the root
     """
 
     def __init__(self, tree,
         node_attributes=None,
+        view_after=None,
         width=800, height=600, 
         node_radius=15, font_size=12,
         animation=True):
@@ -54,6 +74,7 @@ class TreeView:
         self.border = 20
         self.node_radius = node_radius
         self.font = ('Verdana', font_size)
+        self.small_font = ('Verdana', font_size//2)
         
         self.animation = animation
         self.end_pause = False   # controls the display loop
@@ -73,6 +94,13 @@ class TreeView:
         self.snapshots = [self._create_snapshot()]
         self.current_snapshot_index = 0 
         # TODO (low priority) do incremental versions :)
+        
+        # provide self.view(**kwargs)
+        if isinstance(tree, Viewable):
+            tree._viewer = self
+        # and wrap methods to invoke view
+        self._view_after(view_after)
+
 
     def _createGUI(self):
         # main window
@@ -83,16 +111,16 @@ class TreeView:
         # controls
         self.continue_button = Button(self.window, text="Continue", 
             command=self._continue_callback)
-        self.continue_button.pack()
+        self.continue_button.pack(side='left')
         
         # TODO enable/disable buttons
         self.previous_button = Button(self.window, text="Prev", 
             command=self._previous_callback)
-        self.previous_button.pack()
+        self.previous_button.pack(side='left')
         
         self.next_button = Button(self.window, text="Next", 
             command=self._next_callback)
-        self.next_button.pack()
+        self.next_button.pack(side='left')
 
     def _continue_callback(self):
         self.end_pause = True   # exit the event loop
@@ -165,6 +193,11 @@ class TreeView:
     #  - exit script or
     #  - reopen on next view()
     def view(self, **kwargs):
+        """View the current state of the tree and save it to the history.
+
+        Kwargs:
+            highlight (iterable of Node): some nodes to be highlighted.
+        """
         snapshot = self._create_snapshot()
         snapshot['info'] = kwargs
         self.snapshots.append(snapshot)
@@ -196,7 +229,7 @@ class TreeView:
             try:
                 node_colors[node] = attr['color']
                 node_label_colors[node] = 'white'
-            except AttributeError as e:
+            except KeyError as e:
                 node_colors[node] = 'white'
                 node_label_colors[node] = 'black'
         
@@ -211,7 +244,11 @@ class TreeView:
 
             return (nx*f + ox*(1-f), ny*f + oy*(1-f))
 
-        def draw_edges(f=1):
+        def draw(f=1):
+            self.canvas.delete(tkinter.ALL)
+            # TODO use self.canvas.move(item, dx, dy)
+            
+            # edges
             for node in new_snapshot['nodes']:
                 if node != new_snapshot['root']:
                     # has parent
@@ -219,7 +256,7 @@ class TreeView:
                     self.canvas.create_line(currentPos(node, f), 
                         currentPos(new_snapshot['nodes'][node][1]['parent'], f))
 
-        def draw_nodes(f=1):
+            # nodes
             for node in new_snapshot['nodes']:
                 (x,y) = currentPos(node, f)
                 self.canvas.create_oval(    # node outline: circle
@@ -232,16 +269,32 @@ class TreeView:
                     fill=node_label_colors[node],
                     font=self.font)
                 # additional info next to node
+                info_space = 5  # TODO setting
                 info = "\n".join(
                     "{}: {}".format(a, str(getattr(node, a))) 
                         for a in self.node_attributes
                     )
                 self.canvas.create_text(    
-                    x + 2*self.node_radius, y,
+                    x + self.node_radius + info_space, y,
                     text=info,
                     fill="black",
-                    font=self.font,
+                    font=self.small_font,
                     anchor=tkinter.W)
+
+            # additional info
+            # highlight node
+            highlight_nodes = new_snapshot['info'].get('highlight_nodes', [])
+            arrow_length = 2*self.node_radius   # TODO setting
+            for node in highlight_nodes:
+                if node in new_snapshot['nodes']:
+                    x, y = currentPos(node, f)
+                    self.canvas.create_line(    # a arrow to the node
+                        x - self.node_radius - arrow_length, y,
+                        x - self.node_radius, y,
+                        arrow='last',
+                        width=2)
+
+            self.canvas.update()
 
         if self.animation:
             anim_duration = 0.5
@@ -251,25 +304,12 @@ class TreeView:
         
             for frame in range(1, total_frames+1):
                 f = frame/total_frames
-
-                # TODO use self.canvas.move(item, dx, dy)
-                self.canvas.delete(tkinter.ALL)
-
-                draw_edges(f)   # render edges below nodes
-                draw_nodes(f)
-
-                self.canvas.update()
-
+                draw(f)
                 time_to_pause = max(0, anim_duration*f - (time.time() - start))
                 time.sleep(time_to_pause)
  
         else:
-            self.canvas.delete(tkinter.ALL)
-
-            draw_edges()
-            draw_nodes()
-
-            self.canvas.update()
+            draw()
 
     def _pause_until_continue(self):
         """A simple event loop."""
@@ -278,13 +318,20 @@ class TreeView:
             self.window.update()
             time.sleep(0.05)
 
-    def display_after(self, f):
-        # TODO modify class
+    # TODO view_after redesign
+    def _view_after(self, f):
+        """Wrap a function f (of a class) to automatically invoke 
+        self.view(method=f.__name__) after execution. 
+        """
+        # TODO view_after redesign
+        # TODO split drawing and observation in different classes
+        return
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             res = f(*args, **kwargs)
-            self.display()
+            self.view(method=f.__name__)
             return res
+        wrapper = types.MethodType(wrapper, self.t)
 
 
 if __name__ == '__main__':
@@ -308,7 +355,7 @@ if __name__ == '__main__':
     random.shuffle(universe)
     for i in universe:
         t.insert(i)
-        tv.view()
+        tv.view(highlight_nodes=[t.root])
 
     #t.split(6)
     #tv.view()
