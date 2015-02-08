@@ -1,18 +1,21 @@
-from bintree import BinaryTree, Node
+from tree.bintree import BinaryTree, Node
+
 
 class NaiveBST(BinaryTree):
+
     """
     An unbalanced Binary Search Tree Implementation.
 
     No augumented data.
     """
+
     def __init__(self):
         super().__init__()
         self.root = None
 
     def _search(self, key):
         p = self.root
-        while p != None:
+        while p is not None:
             if p.key == key:
                 return p.data
             elif p.key < key:
@@ -38,20 +41,23 @@ class NaiveBST(BinaryTree):
             # and write augumenting information on entering (exiting?) node
             def moveLeft(p):
                 return p.left
+
             def moveRight(p):
                 return p.right
+
             def moveUp(p):
                 return p.parent
+
             def rotate(p):
                 p.rotate()
                 return p
-            
+
             def alg(p):
                 # you can read p.* but not p.*.*
-                # you can also write p.info etc. but p.key is fixed and the pointers
-                # can only be modified with rotations
+                # you can also write p.info etc. but p.key is fixed and
+                # the pointers can only be modified with rotations
                 # you must execute one of the above operations or return
-                if p == None:
+                if p is None:
                     raise KeyError("Key {} not found".format(searchTarget))
                 elif p.key == searchTarget:
                     return p
@@ -67,16 +73,17 @@ class NaiveBST(BinaryTree):
         p = self.root   # pointer is always initialized to root node
         p = alg(p)      # run algorithm
 
-        return p.data       
+        return p.data
 
     def insert(self, key, data=None):
         """
         Insert or update data for given key.
 
-        Returns True for insert (key is new) and False for update (key already present).
+        Returns True for insert (key is new) and
+        False for update (key already present).
         """
         # TODO quick and dirty implementation
-        if self.root == None:
+        if self.root is None:
             self.root = Node(key, data, tree=self)
             return True
 
@@ -84,7 +91,7 @@ class NaiveBST(BinaryTree):
         parent = None
         isLeftChild = False
 
-        while p != None:
+        while p is not None:
             if key == p.key:
                 p.data = data
                 return False
@@ -114,6 +121,33 @@ class NaiveBST(BinaryTree):
         return self.root.preorder()
 
 
+def perfect_inserter(t, keys):
+    """Insert keys into tree t such that t is perfect.
+    Args:
+        t (BinaryTree): An empty tree.
+        keys (list): A sorted list of keys.
+    """
+    def f(n):
+        """find the point so partition n keys for a perfect tree"""
+        # x = 1
+        # while x <= n//2:
+        #     x *= 2
+        x = 1 << (n.bit_length() - 1)
+        if x//2 - 1 <= (n-x):
+            return x - 1
+        else:
+            return n - x//2
+
+    n = len(keys)
+    if n == 0:
+        return
+    else:
+        x = f(n)
+        t.insert(keys[x])
+        perfect_inserter(t, keys[:x])
+        perfect_inserter(t, keys[x+1:])
+
+
 def usage():
     import random
     random.seed(0)  # do always the same for testing
@@ -121,7 +155,7 @@ def usage():
     # tree = NaiveBST()
     # print(tree)
     # print()
-    
+
     # tree.insert(2)
     # print(tree)
     # print()
@@ -135,7 +169,6 @@ def usage():
     # print()
 
     # print("Random insertions")
-    # import random
     # tree = NaiveBST()
     # for i in range(10):
     #   n = random.randint(1,20)
@@ -156,19 +189,18 @@ def usage():
     node5.rotate()
     print(tree)
     # print(' '.join([str(key) for key in tree.preorder()]))
-    
-    # tree.show()
-    import drawing
-    
-    # tv = drawing.TreeView(tree)
-    # tv.display()
-    # tree.root.right.rotate()
-    # tv.display()
+
+    from viewer.treeview import TreeView
+    tv = TreeView(tree)
+    tv.view()
+    tree.root.right.rotate()
+    tv.view()
     print(tree.search_functional(4))
+
 
 def join():
     t = NaiveBST()
-    
+
     t.insert(7)
     t.insert(4)
     t.insert(2)
@@ -180,77 +212,96 @@ def join():
     t.insert(8)
     t.insert(10)
 
-    import drawing
-    tv = drawing.TreeView(t)
-    tv.display(pause=1)
-    
+    from viewer.treeview import TreeView
+    tv = TreeView(t)
+    tv.view()
+
     p = t.root
     p.left.rotate()
-    tv.display(pause=1)
+    tv.view()
     p.left.rotate()
-    tv.display(pause=1)
+    tv.view()
 
-def dsw_algorithm(t, v):
+
+def dsw_algorithm(t):
     p = t.root
     n = 0   # number of nodes
     if not p:
         return
-    v.view(highlight_nodes=[p])
+    t.view(highlight_nodes=[p])
 
     # phase 1: make a right leaning chain/linked list
     # go to leaf
     while p.right:
         p = p.right
-        v.view(highlight_nodes=[p])
+        t.view(highlight_nodes=[p])
     # go up and rotate all left childs until at root
     while True:
         while p.left:
             p.left.rotate()
-            v.view(highlight_nodes=[p])
+            t.view(highlight_nodes=[p])
 
         if p.parent:
             p = p.parent
             n += 1
-            v.view(highlight_nodes=[p])
+            t.view(highlight_nodes=[p])
         else:
             break
-    # phase 2: 
     n += 1
+    # phase 2: compress the tree by rotating every other node
+    advanced = False
 
-    x = 1       # discrete log
-    while 2*x < n:
-        x *= 1
-        
+    def compress(p, count):
+        for c in range(count):
+            p = p.right
+            p.rotate()
+            p = p.right
+            t.view()
+    # Day - almost perfect binary tree
+    if not advanced:
+        m = (n - 1)//2
+        while m > 0:
+            compress(t.root, m)
+            n -= m + 1
+            m = n//2
+
+    # Stoud, Warren - perfect binary tree
+    else:
+        t.view()
+
+        d = (1 << (n+1).bit_length() - 1) - 1
+        print(n, d)
+
+        compress(t.root, n - d)
+        while d > 0:
+            d //= 2
+            compress(t.root, d)
+
 
 def dsw_algorithm_vis():
-    from functionaltree.treeview import TreeView
+    from viewer.treeview import TreeView
     t = NaiveBST()
     v = TreeView(t)
-    keys = range(10)
-    keys = [4, 2, 6, 1, 3, 5, 7]
-    for i in keys:
-        t.insert(i)
-    v.view()
-    
-    dsw_algorithm(t,v)
-    v.view()
-    # while p.right and p.right.right:
-    #     p = p.right
-    #     p.rotate()
-    #     p = p.right
-    #     v.view()
 
+    # keys = range(10)
+    # keys = [4, 2, 6, 1, 3, 5, 7]
+    keys = range(25)
 
-    # while p.parent and p.parent.parent:
-    #     p.rotate()
-    #     p = p.parent
-    #     v.view()
+    # for i in keys:
+    #     t.insert(i)
+    perfect_inserter(t, sorted(keys))
+
+    t.view()
+
+    dsw_algorithm(t, v)
+    t.view()
 
 
 def main():
     # usage()
     # join()
     dsw_algorithm_vis()
+
 
 if __name__ == '__main__':
     main()

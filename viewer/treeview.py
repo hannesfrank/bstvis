@@ -4,31 +4,37 @@ import time
 import functools
 import types
 
+
 class Viewable(object):
-    """Inherit from this to get a method to manually view the datastructure.
+
     """
+    Inherit from this to get a method to manually view the datastructure.
+    """
+
     def __init__(self):
         super().__init__()
         self._viewer = None
 
-    def view(*args, **kwargs):
+    def view(self, *args, **kwargs):
         if self._viewer:
             self._viewer.view(*args, **kwargs)
 
+
 class TreeView(object):
+
     """Viewer for a Binary Trees.
 
-    If your binary tree is a subclass of Viewable you can use 
+    If your binary tree is a subclass of Viewable you can use
     self.view(**kwargs) to manually invocate a view inside the tree class.
-    
-    Note: 
-        A node must always represent the same key-data-pair and should not 
+
+    Note:
+        A node must always represent the same key-data-pair and should not
         overwrite default __hash__ to be usable as a dictionary key.
         TODO we could add a uid to each node to identify it.
 
     Args:
-        tree (BinaryTree): A reference to the tree to be viewed.
-        node_attributes (list, optional): fields of a Node as string which 
+        tree (tree.BinaryTree): A reference to the tree to be viewed.
+        node_attributes (list, optional): fields of a Node as string which
             should be viewed next to the node, default [].
         # TODO view_after redesign
         view_after (list of string, optional): the name of all functions of the
@@ -36,10 +42,10 @@ class TreeView(object):
             default [].
         width (int, optional): tk-viewport width in px, default 800.
         height (int, optional): tk-viewport height in px, default 600.
-        node_radius (int, optional): radius of the nodes of the tree in px, 
+        node_radius (int, optional): radius of the nodes of the tree in px,
             default 15.
         font_size (int, optional): font_size of node labels in pt, default 12.
-        animation (bool, optional): animate between tree snapshots, 
+        animation (bool, optional): animate between tree snapshots,
             default True.
 
     Example:
@@ -50,22 +56,22 @@ class TreeView(object):
         >>> v = TreeView(t, node_attributes=['bh'],
         # TODO view_after redesign
         ...       view_after=['insert', 'delete'])
-    
+
         execute your algorithm
         >>> t.insert(4)     # invokes view(method='insert(4)')
-        >>> t.insert(2)     
-        
+        >>> t.insert(2)
+
         and view at special states
         >>> v.view(highlight_nodes=[t.root])    # highlight the root
     """
 
     def __init__(self, tree,
-        node_attributes=None,
-        view_after=None,
-        width=800, height=600, 
-        node_radius=15, font_size=12,
-        animation=True):
-    
+                 node_attributes=None,
+                 view_after=None,
+                 width=800, height=600,
+                 node_radius=15, font_size=12,
+                 animation=True):
+
         self.tree = tree
         self.node_attributes = node_attributes if node_attributes else []
 
@@ -75,32 +81,32 @@ class TreeView(object):
         self.node_radius = node_radius
         self.font = ('Verdana', font_size)
         self.small_font = ('Verdana', font_size//2)
-        
+
         self.animation = animation
         self.end_pause = False   # controls the display loop
         # TODO cleanly implement pause (continue after delay not button press)
         # TODO implement animation with canvas.move() for performance?
         #   store tk-index for each node
-        
+
         self._createGUI()
 
         # Each display() creates a snapshot of the tree.
         # A snapshot is a dict with the following data:
         #   - 'nodes': {node: ((x,y), node.__dict__) for all nodes}
         #   - 'root': tree.root
-        #   - 'info': the kwargs passed to view(..), e.g. the current method of 
+        #   - 'info': the kwargs passed to view(..), e.g. the current method of
         #       the alg
         # The display position of the nodes is saved for animation.
+        # TODO do we need an initial snapshot?
         self.snapshots = [self._create_snapshot()]
-        self.current_snapshot_index = 0 
+        self.current_snapshot_index = 0
         # TODO (low priority) do incremental versions :)
-        
+
         # provide self.view(**kwargs)
         if isinstance(tree, Viewable):
             tree._viewer = self
         # and wrap methods to invoke view
         self._view_after(view_after)
-
 
     def _createGUI(self):
         # main window
@@ -109,32 +115,45 @@ class TreeView(object):
         self.canvas.pack()
 
         # controls
-        self.continue_button = Button(self.window, text="Continue", 
+        self.continue_button = Button(
+            self.window, text="Continue", underline=0,
             command=self._continue_callback)
         self.continue_button.pack(side='left')
-        
+
         # TODO enable/disable buttons
-        self.previous_button = Button(self.window, text="Prev", 
+        self.previous_button = Button(
+            self.window, text="Prev", underline=0,
             command=self._previous_callback)
         self.previous_button.pack(side='left')
-        
-        self.next_button = Button(self.window, text="Next", 
+
+        self.next_button = Button(
+            self.window, text="Next", underline=0,
             command=self._next_callback)
         self.next_button.pack(side='left')
 
-    def _continue_callback(self):
+        # global shortcuts
+        self.window.bind('<Escape>', self._close_callback)
+        self.window.bind('<c>', lambda e: self.continue_button.invoke())
+        self.window.bind('<p>', lambda e: self.previous_button.invoke())
+        self.window.bind('<n>', lambda e: self.next_button.invoke())
+
+    def _continue_callback(self, event=None):
         self.end_pause = True   # exit the event loop
 
-    def _previous_callback(self):
+    def _previous_callback(self, event=None):
         self._view(self.current_snapshot_index - 1)
-    
-    def _next_callback(self):
+
+    def _next_callback(self, event=None):
         self._view(self.current_snapshot_index + 1)
+
+    def _close_callback(self, event=None):
+        self.window.destroy()      # TODO or use destroy() (quit kills tcl)
 
     def _create_snapshot(self):
         snapshot = {
             'nodes': {},
-            'root': self.tree.root
+            'root': self.tree.root,
+            'info': {}
         }
 
         # calculate the position in viewport
@@ -143,15 +162,16 @@ class TreeView(object):
         for node, p in pos.items():
             # save other attributes
             snapshot['nodes'][node] = (
-                p, 
-                # TODO is using __dict__ save or is a more advanced solution with
-                # inspect (see also vars(), dir())
-                # or even use pickle
+                p,
+                # TODO is using __dict__ save
+                # or is a more advanced solution necessary? e.g.
+                #   inspect (see also vars(), dir())
+                #   or even use pickle
                 node.__dict__.copy()
             )
 
         return snapshot
-            
+
     def _layout_tree(self):
         """Layout a binary tree, i.e. calculate the position of each node in
         the viewport.
@@ -172,7 +192,7 @@ class TreeView(object):
             dy = h/d if d != 0 else 0
 
             pos[self.tree.root] = (x_0, y_0)
-            
+
             def f(node, depth, parent_pos):
                 if node:
                     y = y_0 + depth*dy
@@ -180,14 +200,13 @@ class TreeView(object):
                         x = parent_pos[0] - (w/2)/(2**depth)
                     else:
                         x = parent_pos[0] + (w/2)/(2**depth)
-                    pos[node] = (x,y)
-                    f(node.left, depth+1, (x,y))
-                    f(node.right, depth+1, (x,y))
+                    pos[node] = (x, y)
+                    f(node.left, depth+1, (x, y))
+                    f(node.right, depth+1, (x, y))
 
             f(self.tree.root.left, 1, (x_0, y_0))
             f(self.tree.root.right, 1, (x_0, y_0))
         return pos
-
 
     # TODO handle close event:
     #  - exit script or
@@ -201,21 +220,22 @@ class TreeView(object):
         snapshot = self._create_snapshot()
         snapshot['info'] = kwargs
         self.snapshots.append(snapshot)
-        
+
         # display the new snapshot and enter the event loop
-        #start = time.time()
+        # start = time.time()
         self._view(len(self.snapshots) - 1)
         self._pause_until_continue()
-        #duration = time.time() - start
-        #if wait:
+        # duration = time.time() - start
+        # if wait:
         #    self._pause_until_continue()
-        #elif pause > duration:
+        # elif pause > duration:
         #    time.sleep(pause - duration)
 
     def _view(self, new_snapshot_index):
+        print(new_snapshot_index)
         if new_snapshot_index == self.current_snapshot_index \
-            or new_snapshot_index < 0 \
-            or new_snapshot_index >= len(self.snapshots):
+                or new_snapshot_index < 0 \
+                or new_snapshot_index >= len(self.snapshots):
             return
 
         old_snapshot = self.snapshots[self.current_snapshot_index]
@@ -229,10 +249,10 @@ class TreeView(object):
             try:
                 node_colors[node] = attr['color']
                 node_label_colors[node] = 'white'
-            except KeyError as e:
+            except KeyError:
                 node_colors[node] = 'white'
                 node_label_colors[node] = 'black'
-        
+
         def currentPos(node, f):
             # interpolate between old and new pos of a node in new_snapshot
             # where f is in [0..1]
@@ -247,20 +267,22 @@ class TreeView(object):
         def draw(f=1):
             self.canvas.delete(tkinter.ALL)
             # TODO use self.canvas.move(item, dx, dy)
-            
+
             # edges
             for node in new_snapshot['nodes']:
                 if node != new_snapshot['root']:
                     # has parent
                     # TODO for some trees arrows are required
-                    self.canvas.create_line(currentPos(node, f), 
-                        currentPos(new_snapshot['nodes'][node][1]['parent'], f))
+                    self.canvas.create_line(
+                        currentPos(node, f),
+                        currentPos(
+                            new_snapshot['nodes'][node][1]['parent'], f))
 
             # nodes
             for node in new_snapshot['nodes']:
-                (x,y) = currentPos(node, f)
+                (x, y) = currentPos(node, f)
                 self.canvas.create_oval(    # node outline: circle
-                    x - self.node_radius, y - self.node_radius, 
+                    x - self.node_radius, y - self.node_radius,
                     x + self.node_radius, y + self.node_radius,
                     fill=node_colors[node])
                 self.canvas.create_text(    # node label: key
@@ -268,13 +290,14 @@ class TreeView(object):
                     text=str(node.key),
                     fill=node_label_colors[node],
                     font=self.font)
+
                 # additional info next to node
                 info_space = 5  # TODO setting
                 info = "\n".join(
-                    "{}: {}".format(a, str(getattr(node, a))) 
+                    "{}: {}".format(a, str(getattr(node, a)))
                         for a in self.node_attributes
                     )
-                self.canvas.create_text(    
+                self.canvas.create_text(
                     x + self.node_radius + info_space, y,
                     text=info,
                     fill="black",
@@ -301,13 +324,13 @@ class TreeView(object):
             FPS = 30
             total_frames = int(max(anim_duration * FPS, 1))
             start = time.time()
-        
+
             for frame in range(1, total_frames+1):
                 f = frame/total_frames
                 draw(f)
                 time_to_pause = max(0, anim_duration*f - (time.time() - start))
                 time.sleep(time_to_pause)
- 
+
         else:
             draw()
 
@@ -320,26 +343,27 @@ class TreeView(object):
 
     # TODO view_after redesign
     def _view_after(self, f):
-        """Wrap a function f (of a class) to automatically invoke 
-        self.view(method=f.__name__) after execution. 
+        """Wrap a function f (of a class) to automatically invoke
+        self.view(method=f.__name__) after execution.
         """
         # TODO view_after redesign
         # TODO split drawing and observation in different classes
-        return
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             res = f(*args, **kwargs)
             self.view(method=f.__name__)
             return res
         wrapper = types.MethodType(wrapper, self.t)
+        return wrapper
 
 
 if __name__ == '__main__':
-    from rb import RBTree
+    from tree.rb import RBTree
 
     t = RBTree()
     tv = TreeView(t, node_attributes=['bh'],
-        width=1300, height=600, node_radius=8, font_size=8, animation=True)
+                  width=1300, height=600, node_radius=8, font_size=8,
+                  animation=True)
 
     import random
     random.seed(0)
@@ -350,12 +374,12 @@ if __name__ == '__main__':
     #     t.insert(i)
     #     # tv.view(pause=0.5)
     #     tv.view()
-    
+
     universe = list(range(20))
     random.shuffle(universe)
     for i in universe:
         t.insert(i)
         tv.view(highlight_nodes=[t.root])
 
-    #t.split(6)
-    #tv.view()
+    # t.split(6)
+    # tv.view()

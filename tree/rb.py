@@ -1,20 +1,23 @@
-from bintree import Node
-from naive import NaiveBST
+from tree.bintree import Node
+from tree.naive import NaiveBST
 
 RED = 'red'
 BLACK = 'black'
 
+
 class RBNode(Node):
+
     """
-    Representation of a node in a Red Tree, 
+    Representation of a node in a Red Tree,
     i.e. has key, left/right child and parent
     and additionally color and black-height bh.
 
     The black-height has to be maintained during rotations.
     """
-    def __init__(self, key, 
-        data=None, parent=None, left=None, right=None, tree=None,
-        color=RED, bh=0):
+
+    def __init__(self, key,
+                 data=None, parent=None, left=None, right=None, tree=None,
+                 color=RED, bh=0):
         """
         root node should have tree set to adjust when rotated
         """
@@ -28,15 +31,14 @@ class RBNode(Node):
             return self.parent.parent
         else:
             return None
-    
-    
+
     def rotate(self):
         """
         Rotate node with parent if present.
         """
-        if self.parent == None:
+        if self.parent is None:
             return
-        
+
         parent = self.parent
 
         if parent.parent:
@@ -53,15 +55,19 @@ class RBNode(Node):
 
         if parent.left == self:
             parent.left = self.right
-            if self.right: self.right.parent = parent
+            if self.right:
+                self.right.parent = parent
             self.right = parent
         elif parent.right == self:
             parent.right = self.left
-            if self.left: self.left.parent = parent
+            if self.left:
+                self.left.parent = parent
             self.left = parent
         parent.parent = self
 
+
 class RBTree(NaiveBST):
+
     """
     A balanced BST implementation.
 
@@ -72,10 +78,11 @@ class RBTree(NaiveBST):
     2. Every RED node has two BLACK children.
     3. Every root-to-leaf-path has the same number of BLACK nodes.
 
-    Optionally the black-height of a node p 
+    Optionally the black-height of a node p
         bh(p) = #(black nodes in a p-to-leaf-path)
     can be maintained without extra cost.
     """
+
     def __init__(self):
         super().__init__()
     # drawing reads color attributes so use constants of matplotlib
@@ -86,9 +93,10 @@ class RBTree(NaiveBST):
         """
         Insert or update data for given key.
 
-        Returns True for insert (key is new) and False for update (key already present).
+        Returns True for insert (key is new) and
+        False for update (key already present).
         """
-        if self.root == None:
+        if self.root is None:
             self.root = RBNode(key, data, tree=self, color=BLACK)
             self.root.color = BLACK
             self.root.bh = 1
@@ -98,7 +106,7 @@ class RBTree(NaiveBST):
         parent = None
         isLeftChild = False
 
-        while p != None:
+        while p is not None:
             if key == p.key:
                 p.data = data
                 return False
@@ -131,7 +139,7 @@ class RBTree(NaiveBST):
                     #  / \            / \
                     # qR  yR  -->    qB  yB
                     #  \              \
-                    #...pR          ...R
+                    # ..pR           ..R
                     p.parent.color = BLACK
                     p.parent.bh += 1
                     y.color = BLACK
@@ -139,11 +147,11 @@ class RBTree(NaiveBST):
                     p.parent.parent.color = RED
                     p = p.parent.parent
                 else:
-                    #   gB             gB          qB      
-                    #  / \            / \         / \      
-                    # qR  yB  -->    qR  yB -->  pR  gR        
+                    #   gB             gB          qB
+                    #  / \            / \         / \
+                    # qR  yB  -->    qR  yB -->  pR  gR
                     #  \            /                 \
-                    #...pR         pR                  y
+                    # ..pR         pR                  y
                     if p == p.parent.right:
                         p.rotate()
                         p = p.left
@@ -171,7 +179,7 @@ class RBTree(NaiveBST):
                     p.parent.parent.color = RED
                     p.parent.parent.bh -= 1
                     p.parent.rotate()
-        
+
         if not p.parent and p.color == RED:
             p.color = BLACK
             p.bh += 1
@@ -197,15 +205,15 @@ class RBTree(NaiveBST):
         if t1 and t1.color == RED:
             t1.color = BLACK
             t1.bh += 1
-        t2 = x.right 
+        t2 = x.right
         if t2 and t2.color == RED:
             t2.color = BLACK
             t2.bh += 1
 
-        if t1 == None and t2 == None:
+        if t1 is None and t2 is None:
             x.color = BLACK
             x.bh = 1
-        elif t1 == None:
+        elif t1 is None:
             # x
             #  \
             #  t2
@@ -213,7 +221,7 @@ class RBTree(NaiveBST):
                 x.right.rotate()
             x.color = RED
             x.bh = 0
-        elif t2 == None:
+        elif t2 is None:
             while x.left:
                 x.left.rotate()
             x.color = RED
@@ -222,7 +230,7 @@ class RBTree(NaiveBST):
             x.color = BLACK
             x.bh = t1.bh + 1
         elif t1.bh > t2.bh:
-            # walk down the right path of t1 to search for the node 
+            # walk down the right path of t1 to search for the node
             # with equal blackheight than t2
             # x.right is always t2
             #   /\
@@ -244,7 +252,7 @@ class RBTree(NaiveBST):
     def split(self, x):
         # search for x
         p = self.root
-        while p != None:
+        while p is not None:
             if p.key == x:
                 break
             elif p.key < x:
@@ -268,12 +276,11 @@ class RBTree(NaiveBST):
                 RBTree._join(p.left)
 
 
-
 def main():
     import random
     import drawing
     random.seed(0)  # do always the same for testing
-    
+
     tree = RBTree()
     # tv = drawing.TreeView(tree)
     tv = drawing.TreeView(tree, node_attributes=['bh'], animation=True)
@@ -291,11 +298,12 @@ def main():
     # tree.root.left.rotate()
     # tv.display(pause=1)
     tv.test()
-    
+
+
 def joinTest():
     t1 = RBTree()
     t2 = RBTree()
-    
+
     t = RBTree()
     t.insert(7)
 
@@ -316,9 +324,8 @@ def joinTest():
     t2.root.parent = t.root
     t2.root.tree = None
 
-
-    import treeview
-    tv = treeview.TreeView(t)
+    from viewer import treeview
+    tv = treeview.TreeView(t, node_attributes=['bh'])
     tv.view()
     RBTree.join(t)
     tv.view()
@@ -326,7 +333,7 @@ def joinTest():
 if __name__ == '__main__':
     # main()
     joinTest()
-    
+
     # introspection test
     # t = RBTree()
     # t.insert(7)
