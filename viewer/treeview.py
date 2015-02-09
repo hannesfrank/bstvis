@@ -73,7 +73,7 @@ class TreeView(object):
                  animation=True):
 
         self.tree = tree
-        self.node_attributes = node_attributes if node_attributes else []
+        self.node_attribute_names = node_attributes if node_attributes else []
 
         self.width = width
         self.height = height
@@ -106,7 +106,8 @@ class TreeView(object):
         if isinstance(tree, Viewable):
             tree._viewer = self
         # and wrap methods to invoke view
-        self._view_after(view_after)
+        if view_after is not None:
+            self._view_after(view_after)
 
     def _createGUI(self):
         # main window
@@ -167,7 +168,8 @@ class TreeView(object):
                 # or is a more advanced solution necessary? e.g.
                 #   inspect (see also vars(), dir())
                 #   or even use pickle
-                node.__dict__.copy()
+                node.__dict__.copy(),
+                [getattr(node, name) for name in self.node_attribute_names]
             )
 
         return snapshot
@@ -232,7 +234,6 @@ class TreeView(object):
         #    time.sleep(pause - duration)
 
     def _view(self, new_snapshot_index):
-        print(new_snapshot_index)
         if new_snapshot_index == self.current_snapshot_index \
                 or new_snapshot_index < 0 \
                 or new_snapshot_index >= len(self.snapshots):
@@ -244,10 +245,12 @@ class TreeView(object):
 
         node_colors = {}
         node_label_colors = {}
+        node_attributes = {}
 
-        for node, (pos, attr) in new_snapshot['nodes'].items():
+        for node, (pos, node_dict, attr) in new_snapshot['nodes'].items():
+            node_attributes[node] = attr
             try:
-                node_colors[node] = attr['color']
+                node_colors[node] = node_dict['color']
                 node_label_colors[node] = 'white'
             except KeyError:
                 node_colors[node] = 'white'
@@ -294,9 +297,11 @@ class TreeView(object):
                 # additional info next to node
                 info_space = 5  # TODO setting
                 info = "\n".join(
-                    "{}: {}".format(a, str(getattr(node, a)))
-                        for a in self.node_attributes
+                    "{}: {}".format(name, str(value))
+                        for name, value in zip(
+                            self.node_attribute_names, node_attributes[node])
                     )
+
                 self.canvas.create_text(
                     x + self.node_radius + info_space, y,
                     text=info,
