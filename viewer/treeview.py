@@ -3,7 +3,11 @@ import tkinter
 import time
 import functools
 import types
+from enum import Enum
 
+class NodeShape(Enum):
+    circle = 1
+    square = 2
 
 class Viewable(object):
 
@@ -44,6 +48,8 @@ class TreeView(object):
         height (int, optional): tk-viewport height in px, default 600.
         node_radius (int, optional): radius of the nodes of the tree in px,
             default 15.
+        node_shape (NodeShape, optional): a function (node) -> NodeShape
+            mapping a node to it desired shape, default all circles.
         font_size (int, optional): font_size of node labels in pt, default 12.
         animation (bool, optional): animate between tree snapshots,
             default True.
@@ -69,7 +75,8 @@ class TreeView(object):
                  node_attributes=None,
                  view_after=None,
                  width=800, height=600,
-                 node_radius=15, font_size=12,
+                 node_radius=15, node_shape=None,
+                 font_size=12,
                  animation=True):
 
         self.tree = tree
@@ -79,6 +86,12 @@ class TreeView(object):
         self.height = height
         self.border = 20
         self.node_radius = node_radius
+        if node_shape is not None:
+            self.node_shape = node_shape
+        else:
+            self.node_shape = lambda n: NodeShape.circle
+
+
         self.font = ('Verdana', font_size)
         self.small_font = ('Verdana', font_size//2)
 
@@ -284,10 +297,16 @@ class TreeView(object):
             # nodes
             for node in new_snapshot['nodes']:
                 (x, y) = currentPos(node, f)
-                self.canvas.create_oval(    # node outline: circle
-                    x - self.node_radius, y - self.node_radius,
-                    x + self.node_radius, y + self.node_radius,
-                    fill=node_colors[node])
+                r = self.node_radius
+
+                if self.node_shape(node) is NodeShape.circle:
+                    self.canvas.create_oval(    # node outline: circle
+                        x - r, y - r, x + r, y + r,
+                        fill=node_colors[node])
+                elif self.node_shape(node) is NodeShape.square:
+                    self.canvas.create_rectangle(    # node outline: circle
+                        x - r, y - r, x + r, y + r,
+                        fill=node_colors[node])
                 self.canvas.create_text(    # node label: key
                     x, y,
                     text=str(node.key),
