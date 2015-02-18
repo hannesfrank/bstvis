@@ -289,10 +289,35 @@ class TreeView(object):
                 if node != new_snapshot['root']:
                     # has parent
                     # TODO for some trees arrows are required
-                    self.canvas.create_line(
-                        currentPos(node, f),
-                        currentPos(
-                            new_snapshot['nodes'][node][1]['parent'], f))
+                    # TODO refactor tango fix
+                    if 'is_root' in new_snapshot['nodes'][node][1]:
+                        # tango tree quick fix:
+                        # highlight preferred paths
+                        if new_snapshot['nodes'][node][1]['is_root']:
+                            color = 'green'
+                            width = 1.0
+                            dash = (4, 4)
+                        else:
+                            color = 'blue'
+                            width = 2.0
+                            dash = None
+
+                        self.canvas.create_line(
+                            currentPos(node, f),
+                            currentPos(
+                                new_snapshot['nodes'][node][1]['parent'],
+                                f),
+                            fill=color,
+                            width=width,
+                            dash=dash
+                        )
+                    else:
+                        # other trees
+                        self.canvas.create_line(
+                            currentPos(node, f),
+                            currentPos(
+                                new_snapshot['nodes'][node][1]['parent'], f)
+                            )
 
             # nodes
             for node in new_snapshot['nodes']:
