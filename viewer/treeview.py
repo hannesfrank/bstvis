@@ -1,13 +1,16 @@
 from tkinter import Tk, Button, Canvas
 import tkinter
+from tkinter.constants import YES, BOTH
 import time
 import functools
 import types
 from enum import Enum
 
+
 class NodeShape(Enum):
     circle = 1
     square = 2
+
 
 class Viewable(object):
 
@@ -91,12 +94,12 @@ class TreeView(object):
         else:
             self.node_shape = lambda n: NodeShape.circle
 
-
         self.font = ('Verdana', font_size)
         self.small_font = ('Verdana', font_size//2)
 
         self.animation = animation
         self.end_pause = False   # controls the display loop
+        self.redraw = False      # set to True if redraw is needed
         # TODO cleanly implement pause (continue after delay not button press)
         # TODO implement animation with canvas.move() for performance?
         #   store tk-index for each node
@@ -125,8 +128,10 @@ class TreeView(object):
     def _createGUI(self):
         # main window
         self.window = Tk()
-        self.canvas = Canvas(self.window, width=self.width, height=self.height)
-        self.canvas.pack()
+        self.window.bind('<Configure>', self._resize_callback)
+        self.canvas = Canvas(self.window, width=self.width, height=self.height,
+                             highlightthickness=0)
+        self.canvas.pack(expand=YES, fill=BOTH)
 
         # controls
         self.continue_button = Button(
@@ -163,11 +168,20 @@ class TreeView(object):
     def _close_callback(self, event=None):
         self.window.destroy()      # TODO or use destroy() (quit kills tcl)
 
+    def _resize_callback(self, event):
+        if self.width != self.canvas.winfo_width():
+            self.width = self.canvas.winfo_width()
+            self.redraw = True
+        if self.height != self.canvas.winfo_height():
+            self.height = self.canvas.winfo_height()
+            self.redraw = True
+
     def _create_snapshot(self):
         snapshot = {
             'nodes': {},
             'root': self.tree.root,
-            'info': {}
+            'width': self.width,        # canvas dimensions for scaling
+            'height': self.height,
         }
 
         # calculate the position in viewport
@@ -187,26 +201,28 @@ class TreeView(object):
 
         return snapshot
 
-    def _layout_tree(self):
+    def _layout_tree(self, tree=None):
         """Layout a binary tree, i.e. calculate the position of each node in
         the viewport.
 
         Returns:
             dict: node -> width x height
         """
+        if tree is None:
+            tree = self.tree
         pos = {}
 
-        if self.tree.root:
+        if tree.root:
             w = self.width - 2 * (self.border + self.node_radius)
             h = self.height - 2 * (self.border + self.node_radius)
 
-            d = self.tree.height()
+            d = tree.height()
             y_0 = self.border + self.node_radius
             x_0 = self.border + self.node_radius + w/2
             # TODO do we have to use integer division to get int coordinates?
             dy = h/d if d != 0 else 0
 
-            pos[self.tree.root] = (x_0, y_0)
+            pos[tree.root] = (x_0, y_0)
 
             def f(node, depth, parent_pos):
                 if node:
@@ -219,8 +235,8 @@ class TreeView(object):
                     f(node.left, depth+1, (x, y))
                     f(node.right, depth+1, (x, y))
 
-            f(self.tree.root.left, 1, (x_0, y_0))
-            f(self.tree.root.right, 1, (x_0, y_0))
+            f(tree.root.left, 1, (x_0, y_0))
+            f(tree.root.right, 1, (x_0, y_0))
         return pos
 
     # TODO handle close event:
@@ -246,10 +262,15 @@ class TreeView(object):
         # elif pause > duration:
         #    time.sleep(pause - duration)
 
-    def _view(self, new_snapshot_index):
-        if new_snapshot_index == self.current_snapshot_index \
+    def _view(self, new_snapshot_index=None):
+        if new_snapshot_index is None:
+            # redraw
+            new_snapshot_index = self.current_snapshot_index
+            pass
+        elif new_snapshot_index == self.current_snapshot_index \
                 or new_snapshot_index < 0 \
                 or new_snapshot_index >= len(self.snapshots):
+            # nothing new
             return
 
         old_snapshot = self.snapshots[self.current_snapshot_index]
@@ -273,8 +294,14 @@ class TreeView(object):
             # interpolate between old and new pos of a node in new_snapshot
             # where f is in [0..1]
             nx, ny = new_snapshot['nodes'][node][0]
+            # scale to window dimensions
+            nx *= self.width/new_snapshot['width']
+            ny *= self.height/new_snapshot['height']
+
             if node in old_snapshot['nodes']:
                 ox, oy = old_snapshot['nodes'][node][0]
+                ox *= self.width/old_snapshot['width']
+                oy *= self.height/old_snapshot['height']
             else:
                 ox, oy = nx, ny
 
@@ -389,6 +416,9 @@ class TreeView(object):
         while not self.end_pause:
             self.window.update()
             time.sleep(0.05)
+            if self.redraw:
+                self._view()
+                self.redraw = False
 
     # TODO view_after redesign
     def _view_after(self, f):
