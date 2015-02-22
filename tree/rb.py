@@ -190,16 +190,16 @@ class RBTree(NaiveBST):
     def __repr__(self):
         return self.root.__repr__()
 
-    def join(self):
-        RBTree._join(self.root)
+    def concatenate(self):
+        RBTree._concatenate(self.root)
 
-    def _join(x):
+    def _concatenate(x):
         """
         x is the root of a BST where both subtrees are Red-Black-Trees:
             x
            / \
           T1 T2
-        Modify t such that t is a Red-Black-Tree by doing join(T1, t, T2).
+        Modify t such that t is a Red-Black-Tree by doing concatenate(T1, t, T2).
         """
         t1 = x.left
         if t1 and t1.color == RED:
@@ -270,10 +270,10 @@ class RBTree(NaiveBST):
                 #  / \
                 # L   R
                 p.rotate()
-                RBTree._join(p.right)
+                RBTree._concatenate(p.right)
             else:
                 p.rotate()
-                RBTree._join(p.left)
+                RBTree._concatenate(p.left)
 
 
 def main():
@@ -300,7 +300,7 @@ def main():
     tv.test()
 
 
-def joinTest():
+def concatenateTest():
     t1 = RBTree()
     t2 = RBTree()
 
@@ -327,12 +327,12 @@ def joinTest():
     from viewer import treeview
     tv = treeview.TreeView(t, node_attributes=['bh'])
     tv.view()
-    RBTree.join(t)
+    RBTree.concatenate(t)
     tv.view()
 
 if __name__ == '__main__':
     # main()
-    joinTest()
+    concatenateTest()
 
     # introspection test
     # t = RBTree()
