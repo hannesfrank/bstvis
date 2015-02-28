@@ -1,10 +1,11 @@
-from tkinter import Tk, Button, Canvas
 import tkinter
+from tkinter import Tk, Button, Canvas
 from tkinter.constants import YES, BOTH
 import time
 import functools
 import types
 from enum import Enum
+from viewer.treelayout import SimpleBinaryTreeLayout
 
 
 class NodeShape(Enum):
@@ -182,10 +183,11 @@ class TreeView(object):
             'root': self.tree.root,
             'width': self.width,        # canvas dimensions for scaling
             'height': self.height,
+            'info': {}
         }
 
         # calculate the position in viewport
-        pos = self._layout_tree()
+        pos = SimpleBinaryTreeLayout(self.width, self.height).layout(self.tree)
 
         for node, position in pos.items():
             # save other attributes
@@ -201,44 +203,6 @@ class TreeView(object):
             )
 
         return snapshot
-
-    def _layout_tree(self, tree=None):
-        """Layout a binary tree, i.e. calculate the position of each node in
-        the viewport.
-
-        Returns:
-            dict: node -> width x height
-        """
-        if tree is None:
-            tree = self.tree
-        pos = {}
-
-        if tree.root:
-            w = self.width - 2 * (self.border + self.node_radius)
-            h = self.height - 2 * (self.border + self.node_radius)
-
-            d = tree.height()
-            y_0 = self.border + self.node_radius
-            x_0 = self.border + self.node_radius + w/2
-            # TODO do we have to use integer division to get int coordinates?
-            dy = h/d if d != 0 else 0
-
-            pos[tree.root] = (x_0, y_0)
-
-            def f(node, depth, parent_pos):
-                if node:
-                    y = y_0 + depth*dy
-                    if node == node.parent.left:
-                        x = parent_pos[0] - (w/2)/(2**depth)
-                    else:
-                        x = parent_pos[0] + (w/2)/(2**depth)
-                    pos[node] = (x, y)
-                    f(node.left, depth+1, (x, y))
-                    f(node.right, depth+1, (x, y))
-
-            f(tree.root.left, 1, (x_0, y_0))
-            f(tree.root.right, 1, (x_0, y_0))
-        return pos
 
     # TODO handle close event:
     #  - exit script or
