@@ -187,16 +187,17 @@ class TreeView(object):
         # calculate the position in viewport
         pos = self._layout_tree()
 
-        for node, p in pos.items():
+        for node, position in pos.items():
             # save other attributes
             snapshot['nodes'][node] = (
-                p,
+                position,
                 # TODO is using __dict__ save
                 # or is a more advanced solution necessary? e.g.
                 #   inspect (see also vars(), dir())
                 #   or even use pickle
                 node.__dict__.copy(),
-                [getattr(node, name) for name in self.node_attribute_names]
+                [getattr(node, name) for name in self.node_attribute_names],
+                self.node_shape(node)
             )
 
         return snapshot
@@ -281,7 +282,9 @@ class TreeView(object):
         node_label_colors = {}
         node_attributes = {}
 
-        for node, (pos, node_dict, attr) in new_snapshot['nodes'].items():
+        for node, (pos, node_dict, attr, shape) \
+                in new_snapshot['nodes'].items():
+
             node_attributes[node] = attr
             try:
                 node_colors[node] = node_dict['color']
@@ -350,12 +353,13 @@ class TreeView(object):
             for node in new_snapshot['nodes']:
                 (x, y) = currentPos(node, f)
                 r = self.node_radius
+                shape = new_snapshot['nodes'][node][3]
 
-                if self.node_shape(node) is NodeShape.circle:
+                if shape is NodeShape.circle:
                     self.canvas.create_oval(    # node outline: circle
                         x - r, y - r, x + r, y + r,
                         fill=node_colors[node])
-                elif self.node_shape(node) is NodeShape.square:
+                elif shape is NodeShape.square:
                     self.canvas.create_rectangle(    # node outline: circle
                         x - r, y - r, x + r, y + r,
                         fill=node_colors[node])
@@ -396,7 +400,7 @@ class TreeView(object):
             self.canvas.update()
 
         if self.animation:
-            anim_duration = 0.5
+            anim_duration = 0.1
             FPS = 30
             total_frames = int(max(anim_duration * FPS, 1))
             start = time.time()
