@@ -5,7 +5,7 @@ import time
 import functools
 import types
 from enum import Enum
-from viewer.treelayout import SimpleBinaryTreeLayout
+from viewer.treelayout import SpaceEfficientBinaryTreeLayout
 
 
 class NodeShape(Enum):
@@ -81,6 +81,7 @@ class TreeView(object):
                  width=800, height=600,
                  node_radius=15, node_shape=None,
                  font_size=12,
+                 layout_algorithm=None,
                  animation=True):
 
         self.tree = tree
@@ -97,6 +98,11 @@ class TreeView(object):
 
         self.font = ('Verdana', font_size)
         self.small_font = ('Verdana', font_size//2)
+
+        if layout_algorithm is not None:
+            self.layout_algorithm = layout_algorithm
+        else:
+            self.layout_algorithm = SpaceEfficientBinaryTreeLayout
 
         self.animation = animation
         self.end_pause = False   # controls the display loop
@@ -187,7 +193,7 @@ class TreeView(object):
         }
 
         # calculate the position in viewport
-        pos = SimpleBinaryTreeLayout(self.width, self.height).layout(self.tree)
+        pos = self.layout_algorithm(self.width, self.height).layout(self.tree)
 
         for node, position in pos.items():
             # save other attributes
