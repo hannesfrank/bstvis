@@ -6,6 +6,7 @@ import functools
 import types
 from enum import Enum
 from viewer.treelayout import SpaceEfficientBinaryTreeLayout
+import sys
 
 
 class NodeShape(Enum):
@@ -112,6 +113,8 @@ class TreeView(object):
         #   store tk-index for each node
 
         self._createGUI()
+        # Set to True if you want to exit the application via sys.exit(0)
+        self.exit = False
 
         # Each display() creates a snapshot of the tree.
         # A snapshot is a dict with the following data:
@@ -174,6 +177,7 @@ class TreeView(object):
 
     def _close_callback(self, event=None):
         self.window.destroy()      # TODO or use destroy() (quit kills tcl)
+        self.exit = True
 
     def _resize_callback(self, event):
         if self.width != self.canvas.winfo_width():
@@ -388,6 +392,9 @@ class TreeView(object):
         """A simple event loop."""
         self.end_pause = False
         while not self.end_pause:
+            if self.exit:
+                sys.exit(0)
+
             self.window.update()
             time.sleep(0.05)
             if self.redraw:
