@@ -205,13 +205,9 @@ class SpaceEfficientBinaryTreeLayout():
         return pos
 
 
-def show_layout(layout):
+def show_layout(layout, keys):
     from tree.naive import NaiveBST
     from viewer.treeview import TreeView
-    from random import shuffle
-
-    keys = list(range(32))
-    shuffle(keys)
 
     t = NaiveBST()
     tv = TreeView(t, layout_algorithm=layout)
@@ -222,8 +218,13 @@ def show_layout(layout):
 
 
 def main():
-    show_layout(SimpleBinaryTreeLayout)
-    show_layout(SpaceEfficientBinaryTreeLayout)
+    from random import shuffle
+
+    keys = list(range(32))
+    shuffle(keys)
+
+    show_layout(SimpleBinaryTreeLayout, keys)
+    show_layout(SpaceEfficientBinaryTreeLayout, keys)
 
 
 if __name__ == '__main__':
