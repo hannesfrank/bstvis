@@ -223,20 +223,27 @@ def join():
     tv.view()
 
 
-def dsw_algorithm(t):
+def dsw_algorithm(t, advanced=True):
+    """
+    Day algorithm - almost perfect binary search tree if advanced is False.
+    Warren, Stoud algorithm - perfect binary search tree if advanced is True.
+    """
     p = t.root
-    n = 0   # number of nodes
     if not p:
         return
     t.view(highlight_nodes=[p])
 
-    # phase 1: make a right leaning chain/linked list
-    # go to leaf
+    # n is the number of nodes.
+    n = 1
+
+    # Phase 1: Make a right leaning chain/linked list
+    #  - Go to the maximum node.
     while p.right:
         p = p.right
         t.view(highlight_nodes=[p])
-    # go up and rotate all left childs until at root
-    while True:
+
+    # Go up and rotate all left childs.
+    while p.left or p.parent:
         while p.left:
             p.left.rotate()
             t.view(highlight_nodes=[p])
@@ -245,30 +252,33 @@ def dsw_algorithm(t):
             p = p.parent
             n += 1
             t.view(highlight_nodes=[p])
-        else:
-            break
-    n += 1
-    # phase 2: compress the tree by rotating every other node
-    advanced = False
+
+    # Phase 2: Compress the tree by rotating every other node.
+    advanced = True
 
     def compress(p, count):
         for c in range(count):
             p = p.right
             p.rotate()
+            t.view(highlight_nodes=[p])
             p = p.right
-            t.view()
+
     # Day - almost perfect binary tree
     if not advanced:
+        # The right leaning chain has n nodes and n - 1 edges.
+        # So we can go right n - 1 times which means we can rotate every other
+        # node (n - 1)//2 times.
         m = (n - 1)//2
+
         while m > 0:
+            # Rotate m times.
             compress(t.root, m)
+
             n -= m + 1
             m = n//2
 
     # Stoud, Warren - perfect binary tree
     else:
-        t.view()
-
         d = (1 << (n+1).bit_length() - 1) - 1
         print(n, d)
 
@@ -285,7 +295,7 @@ def dsw_algorithm_vis():
 
     # keys = range(10)
     # keys = [4, 2, 6, 1, 3, 5, 7]
-    keys = range(25)
+    keys = range(4)
 
     # for i in keys:
     #     t.insert(i)
@@ -293,7 +303,7 @@ def dsw_algorithm_vis():
 
     t.view()
 
-    dsw_algorithm(t, v)
+    dsw_algorithm(t, advanced=False)
     t.view()
 
 
