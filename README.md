@@ -1,15 +1,17 @@
 # functionaltree #
 
-[![build status](https://square-src.de/ci/projects/2/status.png?ref=master)](https://square-src.de/ci/projects/2?ref=master)
-
 A educational Binary Search Tree (BST) (visualization) framework.
 
 
 ## BST Implementations ##
 
+The following datastructures are implemented in `tree/`:
+
 - unbalanced BST (`naive.py`)
 - Red-Black Trees (`rb.py`)
-- Splay Trees (`splay.py`)
+- [Splay Trees](http://dx.doi.org/10.1145/3828.3835) (`splay.py`)
+- [Tango Trees](http://dx.doi.org/10.1137/S0097539705447347)  (`tango_strict.py`)
+
 
 ## Visualization ##
 
@@ -17,17 +19,10 @@ See `treeview.py` for an example.
 
 
 ## Requirements ##
-`python3`
 
-The old viewer in `drawing.py` needs
+Python 3.
 
-- `matplotlib` and
-- `networkx`
-
-which can be installed with `pip`.
-
-The new viewer just needs `tkinter` which should be in the standard library.
-You maybe have to do 
+In Ubuntu you may have to install `tkinter` separately:
 ```sh
 sudo apt-get install python3-tk
 ```
