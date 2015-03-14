@@ -195,11 +195,11 @@ class RBTree(NaiveBST):
 
     def _concatenate(x):
         """
-        x is the root of a BST where both subtrees are Red-Black-Trees:
+        x is the root of a BST T where both subtrees are Red-Black-Trees:
             x
            / \
           T1 T2
-        Modify t such that t is a Red-Black-Tree by doing concatenate(T1, t, T2).
+        Modify T such that T is a Red-Black-Tree.
         """
         t1 = x.left
         if t1 and t1.color == RED:
@@ -278,44 +278,42 @@ class RBTree(NaiveBST):
 
 def main():
     import random
-    import drawing
+    from  viewer import treeview
     random.seed(0)  # do always the same for testing
 
     tree = RBTree()
-    # tv = drawing.TreeView(tree)
-    tv = drawing.TreeView(tree, node_attributes=['bh'], animation=True)
-    n = 3
+    tv = treeview.TreeView(tree, node_attributes=['bh'])
+    n = 16
     universe = list(range(n))
     random.shuffle(universe)
+
     for key in universe:
         tree.insert(key)
-        # tv.display(pause=0.1)
-    tv.display()
-    # tree.root.left.right.rotate()
-    # tv.display(pause=2)
-    # tree.root.right.left.rotate()
-    # tv.display(pause=0.3)
-    # tree.root.left.rotate()
-    # tv.display(pause=1)
-    tv.test()
+        tv.view()
 
 
 def concatenateTest():
+    import random
+    random.seed(0)
+
+    total_nodes = 25
+    middle = 22
+
+    left = list(range(1, middle))
+    random.shuffle(left)
+    right = list(range(middle + 1, total_nodes + 1))
+    random.shuffle(right)
+
     t1 = RBTree()
     t2 = RBTree()
 
     t = RBTree()
-    t.insert(7)
+    t.insert(middle)
 
-    t1.insert(4)
-    t1.insert(2)
-    t1.insert(6)
-    t1.insert(1)
-    t1.insert(3)
-    t1.insert(5)
-    t2.insert(9)
-    t2.insert(8)
-    t2.insert(10)
+    for i in left:
+        t1.insert(i)
+    for i in right:
+        t2.insert(i)
 
     t.root.left = t1.root
     t1.root.parent = t.root
@@ -331,16 +329,5 @@ def concatenateTest():
     tv.view()
 
 if __name__ == '__main__':
-    # main()
-    concatenateTest()
-
-    # introspection test
-    # t = RBTree()
-    # t.insert(7)
-    # t.insert(2)
-    # r = t.root
-    # print(r)
-    # print(dir(r))
-    # print(r.__dict__)
-    # print(dir(RBNode))
-    # print(RBNode.__dict__)
+    main()
+    # concatenateTest()
