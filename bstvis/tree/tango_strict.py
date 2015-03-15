@@ -107,9 +107,9 @@ You can even use aliases if you do not modify p before using the alias.
     // pp.color = RED   // ERROR - pp is now p.parent.parent
 """
 
-from tree.bintree import BinaryTree
-from tree.rb import RBNode, RED, BLACK
-from tree.naive import perfect_inserter
+from .bintree import BinaryTree
+from .rb import RBNode, RED, BLACK
+from .naive import perfect_inserter
 
 
 def is_root_or_None(node):
@@ -1156,7 +1156,7 @@ class TangoTree(BinaryTree):
                 p = p.parent    # go up
 
 
-from viewer.treeview import NodeShape
+from bstvis.viewer import NodeShape
 
 
 def node_shape(node):
@@ -1167,7 +1167,7 @@ def node_shape(node):
 
 
 def main():
-    from viewer.treeview import TreeView
+    from bstvis.viewer import TreeView
 
     t = TangoTree(range(12))
     tv = TreeView(t,
@@ -1218,10 +1218,10 @@ def sample_tree():
 
     t.root = nodes[4]
 
-    from util import set_parents
+    from bstvis.util import set_parents
     set_parents(t)
 
-    from viewer.treeview import TreeView, NodeShape
+    from bstvis.viewer import TreeView
     tv = TreeView(t,
                   node_attributes=['d', 'min_d', 'max_d'], width=800,
                   node_shape=node_shape)
@@ -1231,5 +1231,5 @@ def sample_tree():
 
 
 if __name__ == '__main__':
-    # sample_tree()
-    main()
+    sample_tree()
+    # main()

@@ -1,4 +1,4 @@
-from tree.bintree import BinaryTree, Node
+from .bintree import BinaryTree, Node
 
 
 class NaiveBST(BinaryTree):
@@ -289,7 +289,8 @@ def dsw_algorithm(t, advanced=True):
 
 
 def dsw_algorithm_vis():
-    from viewer.treeview import TreeView
+    from bstvis.viewer import TreeView
+
     t = NaiveBST()
     v = TreeView(t)
 

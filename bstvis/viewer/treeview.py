@@ -5,7 +5,7 @@ import time
 import functools
 import types
 from enum import Enum
-from viewer.treelayout import SpaceEfficientBinaryTreeLayout
+from .treelayout import SpaceEfficientBinaryTreeLayout
 import sys
 
 
@@ -418,28 +418,17 @@ class TreeView(object):
 
 
 if __name__ == '__main__':
-    from tree.rb import RBTree
+    from bstvis.tree.rb import RBTree
 
     t = RBTree()
     tv = TreeView(t, node_attributes=['bh'],
-                  width=1300, height=600, node_radius=8, font_size=8,
-                  animation=True)
+                  width=1300, height=600, node_radius=12, font_size=12)
 
     import random
     random.seed(0)
-
-    # universe = list(range(50))
-    # random.shuffle(universe)
-    # for i in universe:
-    #     t.insert(i)
-    #     # tv.view(pause=0.5)
-    #     tv.view()
 
     universe = list(range(20))
     random.shuffle(universe)
     for i in universe:
         t.insert(i)
         tv.view(highlight_nodes=[t.root])
-
-    # t.split(6)
-    # tv.view()

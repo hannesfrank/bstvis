@@ -1,5 +1,5 @@
-from tree.bintree import Node
-from tree.naive import NaiveBST
+from .bintree import Node
+from .naive import NaiveBST
 
 RED = 'red'
 BLACK = 'black'
@@ -278,11 +278,11 @@ class RBTree(NaiveBST):
 
 def main():
     import random
-    from  viewer import treeview
+    from bstvis.viewer import TreeView
     random.seed(0)  # do always the same for testing
 
     tree = RBTree()
-    tv = treeview.TreeView(tree, node_attributes=['bh'])
+    tv = TreeView(tree, node_attributes=['bh'])
     n = 16
     universe = list(range(n))
     random.shuffle(universe)
@@ -294,6 +294,7 @@ def main():
 
 def concatenateTest():
     import random
+    from bstvis.viewer import TreeView
     random.seed(0)
 
     total_nodes = 25
@@ -322,8 +323,7 @@ def concatenateTest():
     t2.root.parent = t.root
     t2.root.tree = None
 
-    from viewer import treeview
-    tv = treeview.TreeView(t, node_attributes=['bh'])
+    tv = TreeView(t, node_attributes=['bh'])
     tv.view()
     RBTree.concatenate(t)
     tv.view()

@@ -1,5 +1,5 @@
-from bintree import Node
-from naive import NaiveBST
+from .bintree import Node
+from .naive import NaiveBST
 
 
 class SplayTree(NaiveBST):
@@ -97,21 +97,23 @@ class SplayTree(NaiveBST):
 
 def main():
     import random
-    import drawing
+    from bstvis.viewer import TreeView
     random.seed(0)  # do always the same for testing
 
     tree = SplayTree()
-    tv = drawing.TreeView(tree)
+    tv = TreeView(tree)
+
     n = 16
     universe = list(range(n))
     random.shuffle(universe)
+
     for key in universe:
-        tv.display(0.1)
+        tv.view()
         tree.insert(key)
 
-    tv.display(0.1)
+    tv.view()
     print(tree.search(4))
-    tv.display(0.1)
+    tv.view()
 
 if __name__ == '__main__':
     main()

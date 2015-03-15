@@ -22,7 +22,7 @@ class SimpleBinaryTreeLayout():
     def __init__(self,
                  width=800,
                  height=600,
-                 margin=20):
+                 margin=80):
         self.width = width
         self.height = height
         self.margin = margin
@@ -102,7 +102,7 @@ class SpaceEfficientBinaryTreeLayout():
     def __init__(self,
                  width=800,
                  height=600,
-                 margin=20):
+                 margin=80):
         self.width = width
         self.height = height
         self.margin = margin
