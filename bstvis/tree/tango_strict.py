@@ -131,7 +131,7 @@ class TangoNode(RBNode):
         right
         tree
         color: inherited from RBTree (to balance auxiliary tree).
-        bh: Black-Height from RBTree (just for visualisation).
+        bh: Black-Height from RBTree (concatenate).
         depth (int): depth of node in the perfect BST P (constant over time).
         min_depth (int): The minimum depth of all nodes in auxiliary tree.
         max_depth (int): The maximum depth of all nodes in auxiliary tree.
