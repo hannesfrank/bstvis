@@ -7,14 +7,14 @@ setup(
 
     description='A visualisation framework for binary search trees and algorithms.',
 
-    # url='https://github.com/pypa/sampleproject',
-
     author='Hannes Frank',
     author_email='frankhannes@googlemail.com',
 
     url='https://github.com/hannesfrank/bstvis',
 
     license='MIT',
+
+    packages=find_packages(exclude=('tests', 'docs')),
 
     classifiers=[
         'Development Status :: 3 - Alpha',
