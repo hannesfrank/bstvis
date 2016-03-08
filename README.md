@@ -3,6 +3,13 @@
 A educational Binary Search Tree (BST) (visualization) framework.
 
 
+## Installation ##
+
+```sh
+pip3 install bstvis
+```
+
+
 ## BST Implementations ##
 
 The following datastructures are implemented in `tree/`:

@@ -12,6 +12,8 @@ setup(
     author='Hannes Frank',
     author_email='frankhannes@googlemail.com',
 
+    url='https://github.com/hannesfrank/bstvis',
+
     license='MIT',
 
     classifiers=[
@@ -23,9 +25,11 @@ setup(
         'License :: OSI Approved :: MIT License',
 
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Operating System :: MacOS'
     ],
 
     keywords='bst visualisation'
